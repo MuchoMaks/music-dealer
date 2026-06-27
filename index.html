@@ -342,36 +342,28 @@ async function loadPlaylists(){
 }
 
 async function fetchPlaylistLines(id){
-  const tryPath = async (p) => {
-    try{
-      const d = await api(`/playlists/${id}/${p}?limit=50`);
-      return (d.items||[]).map(it=>{
-        const t = it.track || it;
-        if(!t || !t.name) return null;
-        const art = (t.artists||[]).map(a=>a.name).join(", ");
-        return `${art} - ${t.name}`;
-      }).filter(Boolean);
-    }catch(e){ return { error: e.message }; }
-  };
-  const r = await tryPath("tracks");           // endpoint de lecture documenté
-  if(Array.isArray(r) && r.length) return r;
-  const r2 = await tryPath("items");           // repli (renommage février 2026)
-  if(Array.isArray(r2) && r2.length) return r2;
-  const err = (!Array.isArray(r) && r.error) || (!Array.isArray(r2) && r2.error) || null;
-  return { empty:true, error: err };
+  try{
+    const d = await api(`/playlists/${id}/items?limit=50`);  // fév. 2026 : /tracks → /items
+    const lines = (d.items||[]).map(it=>{
+      const t = it.item || it.track || it;  // fév. 2026 : items[].item (anciennement items[].track)
+      if(!t || !t.name) return null;
+      const art = (t.artists||[]).map(a=>a.name).join(", ");
+      return `${art} - ${t.name}`;
+    }).filter(Boolean);
+    return lines;
+  }catch(e){ return { error: e.message }; }
 }
 
 async function loadPlaylistTracks(id, name){
   listError(""); listLoading(true);
   const res = await fetchPlaylistLines(id);
   listLoading(false);
-  if(Array.isArray(res)){ showResult(name, res); return; }
+  if(Array.isArray(res) && res.length){ showResult(name, res); return; }
+  if(Array.isArray(res)){ listError("Playlist revenue vide (uniquement des fichiers locaux ?). Tes Titres likés et Top tracks restent fiables."); return; }
   if(res.error && /403/.test(res.error)){
-    listError("Lecture refusée (403) : Spotify ne te reconnaît pas comme propriétaire de cette playlist.");
-  } else if(res.error){
-    listError("Spotify a renvoyé : " + res.error);
+    listError("Lecture refusée (403). Reconnecte-toi (Déconnexion → Se connecter) pour rafraîchir l'autorisation ; si ça persiste, c'est une restriction Mode Dev de Spotify — passe par tes Titres likés / Top tracks.");
   } else {
-    listError("Playlist revenue vide côté API. Tes Titres likés et Top tracks restent la voie la plus fiable.");
+    listError("Spotify a renvoyé : " + res.error);
   }
 }
 
