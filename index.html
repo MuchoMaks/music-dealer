@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Découverte · connexion Spotify</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap');
+  :root{
+    --bg:#0B0F1A; --panel:#10162A; --panel2:#0E1424; --line:#1E2740;
+    --frost:#7DE2D1; --frostDim:#3C6F6A; --peach:#E8A87C; --ink:#EAEEF8; --mut:#8893AE; --mut2:#5A647F;
+    --body:'Space Grotesk',ui-sans-serif,system-ui,sans-serif; --mono:'JetBrains Mono',ui-monospace,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);line-height:1.55}
+  .wrap{max-width:760px;margin:0 auto;padding:34px 20px 70px}
+  .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--mut);display:flex;align-items:center;gap:9px;margin-bottom:14px}
+  h1{font-size:28px;line-height:1.15;font-weight:700;margin:0 0 10px;letter-spacing:-.01em}
+  h1 .g{color:var(--frost)}
+  p.lead{color:var(--mut);font-size:14px;line-height:1.6;margin:0 0 22px;max-width:580px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;margin:14px 0}
+  label.fld{display:block;font-size:12px;color:var(--mut);margin:0 0 6px;font-weight:600}
+  input.txt{width:100%;background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:11px;padding:11px 13px;font-family:var(--mono);font-size:13px;outline:none}
+  input.txt:focus{border-color:var(--frostDim);box-shadow:0 0 0 3px rgba(125,226,209,.10)}
+  .btn{appearance:none;border:none;cursor:pointer;font-family:var(--body);font-weight:700;font-size:14px;color:var(--bg);background:var(--frost);border-radius:12px;padding:12px 20px;display:inline-flex;align-items:center;gap:9px;transition:filter .12s,transform .12s}
+  .btn:hover{filter:brightness(1.08)} .btn:active{transform:translateY(1px)}
+  .btn:disabled{opacity:.5;cursor:default;filter:none}
+  .ghost{background:transparent;color:var(--mut);border:1px solid var(--line);font-weight:500;font-size:12.5px;padding:8px 13px}
+  .ghost:hover{color:var(--ink);border-color:var(--frostDim)}
+  .mono{font-family:var(--mono)}
+  .copyfield{display:flex;gap:8px;align-items:center;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin-top:6px}
+  .copyfield code{font-family:var(--mono);font-size:12px;color:var(--frost);overflow:auto;white-space:nowrap;flex:1}
+  .banner{background:#191020;border:1px solid #3a2a14;border-left:3px solid var(--peach);border-radius:10px;padding:12px 14px;font-size:12.5px;color:var(--mut);line-height:1.55;margin:14px 0}
+  .banner b{color:var(--peach)}
+  .seg{display:inline-flex;padding:4px;gap:4px;background:var(--panel2);border:1px solid var(--line);border-radius:12px;margin-bottom:14px}
+  .seg button{border:none;cursor:pointer;font-family:var(--body);font-size:13px;font-weight:600;padding:7px 14px;border-radius:9px;color:var(--mut);background:transparent}
+  .seg button.on{color:var(--bg);background:var(--frost)}
+  .pl{display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--line);border-radius:11px;background:var(--panel);cursor:pointer;transition:border-color .14s,transform .14s;margin-bottom:8px}
+  .pl:hover{border-color:var(--frostDim);transform:translateX(2px)}
+  .pl img{width:42px;height:42px;border-radius:7px;object-fit:cover;background:var(--panel2);flex-shrink:0}
+  .pl .nm{font-weight:600;font-size:14px}
+  .pl .ct{font-size:11.5px;color:var(--mut);font-family:var(--mono)}
+  .ta{width:100%;min-height:150px;resize:vertical;background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:14px;padding:14px 15px;font-family:var(--mono);font-size:12.5px;line-height:1.6;outline:none}
+  .row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .who{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--mut)}
+  .who img{width:26px;height:26px;border-radius:999px}
+  a{color:var(--frost)}
+  .spin{display:inline-block;width:15px;height:15px;border:2px solid rgba(255,255,255,.25);border-top-color:var(--bg);border-radius:50%;animation:s 1s linear infinite}
+  @keyframes s{to{transform:rotate(360deg)}}
+  .hide{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">❄ Découverte · entrée Spotify</div>
+  <h1>Connecte ton Spotify.<br><span class="g">L'analyse part de ce que tu écoutes vraiment.</span></h1>
+  <p class="lead">Connexion via le flux officiel PKCE — aucun mot de passe ne transite par cette page, tout passe par Spotify. Lit tes propres playlists et tes top tracks, puis prépare la liste pour le moteur de découverte.</p>
+
+  <div class="banner">
+    <b>À héberger, pas à ouvrir dans le chat.</b> Le login Spotify a besoin d'une vraie URL enregistrée comme <i>redirect URI</i> : ça ne peut pas aboutir dans l'aperçu Claude. Déploie ce fichier (Vercel / Netlify / GitHub Pages) ou ouvre-le via <span class="mono">http://127.0.0.1:PORT</span> avec un petit serveur local. <span class="mono">localhost</span> n'est plus accepté par Spotify — utilise <span class="mono">127.0.0.1</span> ou du HTTPS.
+  </div>
+
+  <!-- CONFIG -->
+  <div id="config" class="card">
+    <div style="font-weight:700;margin-bottom:12px">Configuration (une fois)</div>
+    <ol style="color:var(--mut);font-size:13px;line-height:1.7;padding-left:18px;margin:0 0 14px">
+      <li>Va sur <a href="https://developer.spotify.com/dashboard" target="_blank" rel="noopener">developer.spotify.com/dashboard</a> → <b>Create app</b>.</li>
+      <li>Dans <b>Redirect URIs</b>, colle l'URL ci-dessous (celle de cette page), puis enregistre.</li>
+      <li>Copie le <b>Client ID</b> de l'app et colle-le ici.</li>
+    </ol>
+    <label class="fld">Redirect URI à enregistrer (auto-détectée)</label>
+    <div class="copyfield"><code id="redirectShown"></code><button class="ghost" onclick="copy(REDIRECT_URI,this)">Copier</button></div>
+    <div style="height:14px"></div>
+    <label class="fld">Client ID</label>
+    <input id="clientId" class="txt" placeholder="ex. 3a9f...c2" />
+    <div class="row" style="margin-top:14px">
+      <button class="btn" id="connectBtn">Se connecter à Spotify</button>
+      <span style="font-size:12px;color:var(--mut2)">Scopes : lecture playlists + top tracks (lecture seule pour l'instant).</span>
+    </div>
+  </div>
+
+  <!-- LOGGED IN -->
+  <div id="app" class="hide">
+    <div class="card">
+      <div class="row" style="justify-content:space-between">
+        <div class="who" id="me"></div>
+        <button class="ghost" onclick="logout()">Déconnexion</button>
+      </div>
+    </div>
+
+    <div class="seg">
+      <button id="tabLiked" class="on" onclick="setTab('liked')">Titres likés</button>
+      <button id="tabTop" onclick="setTab('top')">Top tracks</button>
+      <button id="tabPl" onclick="setTab('pl')">Mes playlists</button>
+    </div>
+
+    <div id="loadingList" class="hide" style="color:var(--mut);font-size:13px;padding:8px 2px"><span class="spin"></span> chargement…</div>
+    <div id="listErr" class="hide banner"></div>
+    <div id="playlists"></div>
+
+    <div id="result" class="hide">
+      <div class="row" style="justify-content:space-between;margin:18px 0 8px">
+        <div style="font-size:13px;color:var(--mut)"><span id="srcName" class="mono" style="color:var(--ink)"></span> · <span id="trackCount"></span> morceaux</div>
+        <button class="ghost" onclick="copy(document.getElementById('tracks').value,this)">Copier la liste</button>
+      </div>
+      <textarea id="tracks" class="ta" spellcheck="false"></textarea>
+
+      <div class="row" style="margin:14px 0 4px;gap:14px">
+        <button class="btn" id="discoverBtn" onclick="runDiscovery()">Lancer la découverte sur Spotify</button>
+        <label style="display:inline-flex;align-items:center;gap:8px;cursor:pointer;user-select:none">
+          <input type="checkbox" id="deep" checked style="accent-color:var(--frost);width:16px;height:16px">
+          <span style="font-size:12.5px;color:var(--mut)">Mode confidentiel</span>
+        </label>
+      </div>
+
+      <div id="progress" class="hide" style="font-size:13px;color:var(--mut);margin-top:12px;line-height:1.6"></div>
+      <div id="discErr" class="hide banner"></div>
+
+      <div id="done" class="hide card" style="border-color:var(--frostDim);background:#0c1a1a;margin-top:14px">
+        <div style="font-weight:700;margin-bottom:6px">Playlist créée sur ton Spotify ✓</div>
+        <div id="doneVibe" style="font-size:13px;color:var(--mut);line-height:1.5;margin-bottom:12px"></div>
+        <a id="doneLink" class="btn" target="_blank" rel="noopener" style="text-decoration:none">Ouvrir dans Spotify</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Config dérivée
+const REDIRECT_URI = location.origin + location.pathname;
+const SCOPES = [
+  "playlist-read-private",
+  "playlist-read-collaborative",
+  "user-top-read",
+  "user-read-recently-played",
+  "user-library-read",
+  "playlist-modify-private",
+  "playlist-modify-public"
+].join(" ");
+document.getElementById("redirectShown").textContent = REDIRECT_URI;
+const savedId = localStorage.getItem("sp_client_id") || "";
+document.getElementById("clientId").value = savedId;
+
+// ── PKCE helpers
+function randStr(n){const a="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~";let s="";for(const x of crypto.getRandomValues(new Uint8Array(n)))s+=a[x%a.length];return s;}
+async function sha256(plain){return await crypto.subtle.digest("SHA-256", new TextEncoder().encode(plain));}
+function b64url(buf){return btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");}
+
+async function login(){
+  const id = document.getElementById("clientId").value.trim();
+  if(!id){ alert("Colle ton Client ID Spotify d'abord."); return; }
+  localStorage.setItem("sp_client_id", id);
+  const verifier = randStr(64);
+  sessionStorage.setItem("pkce_verifier", verifier);
+  const challenge = b64url(await sha256(verifier));
+  const p = new URLSearchParams({
+    client_id:id, response_type:"code", redirect_uri:REDIRECT_URI,
+    scope:SCOPES, code_challenge_method:"S256", code_challenge:challenge
+  });
+  location.href = "https://accounts.spotify.com/authorize?" + p.toString();
+}
+document.getElementById("connectBtn").addEventListener("click", login);
+
+async function exchangeCode(code){
+  const id = localStorage.getItem("sp_client_id");
+  const verifier = sessionStorage.getItem("pkce_verifier");
+  const body = new URLSearchParams({
+    client_id:id, grant_type:"authorization_code", code,
+    redirect_uri:REDIRECT_URI, code_verifier:verifier
+  });
+  const res = await fetch("https://accounts.spotify.com/api/token",{
+    method:"POST", headers:{"Content-Type":"application/x-www-form-urlencoded"}, body
+  });
+  const data = await res.json();
+  if(data.access_token){
+    sessionStorage.setItem("sp_token", data.access_token);
+    history.replaceState({}, "", REDIRECT_URI); // nettoie le ?code=
+    return true;
+  }
+  return false;
+}
+
+function token(){ return sessionStorage.getItem("sp_token"); }
+async function api(path){
+  const res = await fetch("https://api.spotify.com/v1"+path,{headers:{Authorization:"Bearer "+token()}});
+  if(res.status===401){ logout(); throw new Error("token expiré — reconnecte-toi"); }
+  if(!res.ok){ throw new Error("Spotify "+res.status); }
+  return res.json();
+}
+
+async function apiPost(path, body){
+  const res = await fetch("https://api.spotify.com/v1"+path,{
+    method:"POST",
+    headers:{ Authorization:"Bearer "+token(), "Content-Type":"application/json" },
+    body: body ? JSON.stringify(body) : undefined
+  });
+  if(res.status===401){ logout(); throw new Error("token expiré — reconnecte-toi"); }
+  if(!res.ok){ const t=await res.text().catch(()=> ""); throw new Error("Spotify "+res.status+(t?(" — "+t.slice(0,140)):"")); }
+  return res.json();
+}
+
+// grounding : un vrai URI Spotify par artiste (jamais un titre inventé)
+async function resolveTrack(artist, title){
+  if(title){
+    const q = encodeURIComponent(`track:"${title}" artist:"${artist}"`);
+    const d = await api(`/search?type=track&limit=3&q=${q}`).catch(()=>null);
+    const t = d && d.tracks && d.tracks.items && d.tracks.items[0];
+    if(t) return { uri:t.uri };
+  }
+  const q2 = encodeURIComponent(`artist:"${artist}"`);
+  const d2 = await api(`/search?type=track&limit=5&q=${q2}`).catch(()=>null);
+  const items = (d2 && d2.tracks && d2.tracks.items) || [];
+  const match = items.find(t => (t.artists||[]).some(a => a.name.toLowerCase() === artist.toLowerCase())) || items[0];
+  return match ? { uri:match.uri } : null;
+}
+
+function prog(msg){ const el=document.getElementById("progress"); el.classList.remove("hide"); el.textContent=msg; }
+function discErr(msg){ const el=document.getElementById("discErr"); el.classList.toggle("hide", !msg); el.textContent=msg||""; }
+
+async function runDiscovery(){
+  discErr(""); document.getElementById("done").classList.add("hide");
+  const btn=document.getElementById("discoverBtn"); btn.disabled=true;
+  const tracklist=document.getElementById("tracks").value.trim();
+  const deep=document.getElementById("deep").checked;
+  if(!tracklist){ btn.disabled=false; return; }
+  try{
+    // 1) couche mood : le modèle, via la fonction serverless (clé API cachée)
+    prog("Lecture du mood par le modèle…");
+    const r=await fetch("/api/discover",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({tracklist, deep})});
+    if(!r.ok){ throw new Error("La fonction /api/discover a répondu "+r.status+". Vérifie que ANTHROPIC_API_KEY est bien configurée dans Vercel (Settings → Environment Variables) puis redéploie."); }
+    const data=await r.json();
+    const recs=(data && data.recommandations) || [];
+    if(!recs.length) throw new Error("Le modèle n'a renvoyé aucun artiste exploitable.");
+
+    // dédup contre ce que tu écoutes déjà
+    const known=new Set(tracklist.toLowerCase().split("\n").map(l=>l.split(" - ")[0].trim()));
+
+    // 2) grounding Spotify search → URIs réels
+    const uris=[];
+    for(let i=0;i<recs.length;i++){
+      const a=recs[i]; if(!a||!a.artiste) continue;
+      if(known.has(a.artiste.toLowerCase().trim())) continue;
+      prog(`Résolution sur Spotify ${i+1}/${recs.length} · ${a.artiste}`);
+      const t=await resolveTrack(a.artiste, a.titre);
+      if(t) uris.push(t.uri);
+    }
+    if(!uris.length) throw new Error("Aucun de ces artistes n'a été trouvé sur Spotify.");
+
+    // 3) création de la playlist sur ton compte + ajout
+    prog("Création de la playlist sur ton compte…");
+    const me=await api("/me");
+    const src=document.getElementById("srcName").textContent || "écoutes";
+    const today=new Date().toLocaleDateString("fr-FR");
+    const pl=await apiPost("/me/playlists",{ name:`Découverte · ${src} · ${today}`, description:"Mood lu par le modèle, morceaux résolus via Spotify search.", public:false });
+    try{ await apiPost(`/playlists/${pl.id}/items`,{uris}); }     // chemin février 2026
+    catch(_){ await apiPost(`/playlists/${pl.id}/tracks`,{uris}); } // repli
+
+    document.getElementById("doneVibe").textContent=(data.vibe?data.vibe+"  ·  ":"")+`${uris.length} morceaux ajoutés`;
+    const link=(pl.external_urls && pl.external_urls.spotify) || ("https://open.spotify.com/playlist/"+pl.id);
+    document.getElementById("doneLink").href=link;
+    document.getElementById("done").classList.remove("hide");
+  }catch(e){ discErr(e.message); }
+  finally{ document.getElementById("progress").classList.add("hide"); btn.disabled=false; }
+}
+
+function logout(){ sessionStorage.removeItem("sp_token"); show("config"); }
+function show(which){
+  document.getElementById("config").classList.toggle("hide", which!=="config");
+  document.getElementById("app").classList.toggle("hide", which!=="app");
+}
+
+// ── UI app
+async function boot(){
+  const params = new URLSearchParams(location.search);
+  if(params.get("error")){ alert("Spotify a refusé l'autorisation : "+params.get("error")); }
+  if(params.get("code")){
+    const ok = await exchangeCode(params.get("code"));
+    if(!ok){ alert("Échec de l'échange de token. Vérifie le Client ID et la Redirect URI."); }
+  }
+  if(token()){ show("app"); await loadMe(); setTab("liked"); }
+  else { show("config"); }
+}
+
+async function loadMe(){
+  try{
+    const me = await api("/me");
+    window.__meId = me.id;
+    const img = (me.images && me.images[0] && me.images[0].url) || "";
+    document.getElementById("me").innerHTML =
+      (img?`<img src="${img}">`:"") + `<span>Connecté · <b style="color:var(--ink)">${me.display_name||me.id}</b></span>`;
+  }catch(e){ /* ignore */ }
+}
+
+let currentTab = "liked";
+function setTab(t){
+  currentTab = t;
+  document.getElementById("tabLiked").classList.toggle("on", t==="liked");
+  document.getElementById("tabTop").classList.toggle("on", t==="top");
+  document.getElementById("tabPl").classList.toggle("on", t==="pl");
+  document.getElementById("result").classList.add("hide");
+  document.getElementById("playlists").innerHTML = "";
+  listError("");
+  if(t==="pl") loadPlaylists();
+  else if(t==="top") loadTop();
+  else loadLiked();
+}
+
+function listLoading(on){ document.getElementById("loadingList").classList.toggle("hide", !on); }
+function listError(msg){
+  const el = document.getElementById("listErr");
+  el.classList.toggle("hide", !msg); el.textContent = msg||"";
+}
+
+async function loadPlaylists(){
+  listError(""); listLoading(true);
+  try{
+    const data = await api("/me/playlists?limit=50");
+    listLoading(false);
+    const box = document.getElementById("playlists");
+    box.innerHTML = "";
+    const all = data.items || [];
+    const owned = all.filter(pl => pl && pl.owner && pl.owner.id === window.__meId);
+    owned.forEach(pl=>{
+      const img = (pl.images && pl.images[0] && pl.images[0].url) || "";
+      const total = (pl.tracks && typeof pl.tracks.total === "number" && pl.tracks.total > 0) ? pl.tracks.total + " titres" : "ouvrir";
+      const div = document.createElement("div");
+      div.className="pl";
+      div.innerHTML = `<img src="${img}"><div><div class="nm">${esc(pl.name)}</div><div class="ct">${total}</div></div>`;
+      div.onclick = ()=>loadPlaylistTracks(pl.id, pl.name);
+      box.appendChild(div);
+    });
+    const hidden = all.length - owned.length;
+    if(!owned.length){
+      listError("Aucune playlist créée par toi. Depuis février 2026, Spotify bloque la lecture des playlists d'autres personnes (suivies, éditoriales, Discover Weekly). Utilise « Titres likés » ou « Top tracks », ou crée une playlist à toi puis reviens ici.");
+    } else if(hidden > 0){
+      const note = document.createElement("div");
+      note.style.cssText = "font-size:11.5px;color:var(--mut2);margin-top:6px;line-height:1.5";
+      note.textContent = `${hidden} playlist(s) suivie(s)/éditoriale(s) masquée(s) — Spotify n'autorise plus leur lecture par une app tierce.`;
+      box.appendChild(note);
+    }
+  }catch(e){ listLoading(false); listError(e.message); }
+}
+
+async function loadPlaylistTracks(id, name){
+  listError(""); listLoading(true);
+  try{
+    const q = "?limit=50&fields=" + encodeURIComponent("items(track(name,artists(name)))");
+    let data;
+    try{ data = await api(`/playlists/${id}/items${q}`); }       // chemin février 2026
+    catch(_){ data = await api(`/playlists/${id}/tracks${q}`); } // repli ancien chemin
+    listLoading(false);
+    const lines = (data.items||[]).map(it=>{
+      const t = it.track || it;
+      if(!t || !t.name) return null;
+      const art = (t.artists||[]).map(a=>a.name).join(", ");
+      return `${art} - ${t.name}`;
+    }).filter(Boolean);
+    if(!lines.length){
+      listError("Aucun morceau lisible. Si cette playlist n'a pas été créée par toi, Spotify en bloque la lecture (règle de février 2026). Utilise une de tes propres playlists, tes Titres likés ou tes Top tracks.");
+      return;
+    }
+    showResult(name, lines);
+  }catch(e){
+    listLoading(false);
+    listError(/403/.test(e.message) ? "Lecture refusée (403) : cette playlist ne t'appartient pas. Spotify ne permet plus de lire les playlists d'autrui." : e.message);
+  }
+}
+
+async function loadLiked(){
+  listError(""); listLoading(true);
+  try{
+    const data = await api("/me/tracks?limit=50");
+    listLoading(false);
+    const lines = (data.items||[]).map(it=>{
+      const t = it.track || it;
+      if(!t || !t.name) return null;
+      const art = (t.artists||[]).map(a=>a.name).join(", ");
+      return `${art} - ${t.name}`;
+    }).filter(Boolean);
+    if(!lines.length){ listError("Aucun titre liké trouvé. Si tu viens d'ajouter le scope, reconnecte-toi pour autoriser la lecture de ta bibliothèque."); return; }
+    showResult("Mes titres likés", lines);
+  }catch(e){
+    listLoading(false);
+    listError(/403/.test(e.message) ? "Accès bibliothèque refusé : reconnecte-toi (Déconnexion puis Se connecter) pour accorder le nouveau scope de lecture." : e.message);
+  }
+}
+
+async function loadTop(){
+  listError(""); listLoading(true);
+  try{
+    const data = await api("/me/top/tracks?limit=50&time_range=medium_term");
+    listLoading(false);
+    const lines = (data.items||[]).map(t=>{
+      const art = (t.artists||[]).map(a=>a.name).join(", ");
+      return `${art} - ${t.name}`;
+    });
+    showResult("Mes top tracks (6 mois)", lines);
+  }catch(e){ listLoading(false); listError(e.message); }
+}
+
+function showResult(name, lines){
+  document.getElementById("result").classList.remove("hide");
+  document.getElementById("srcName").textContent = name;
+  document.getElementById("trackCount").textContent = lines.length;
+  document.getElementById("tracks").value = lines.join("\n");
+  document.getElementById("result").scrollIntoView({behavior:"smooth", block:"nearest"});
+}
+
+function esc(s){ return (s||"").replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c])); }
+function copy(text, btn){
+  const ta=document.createElement("textarea"); ta.value=text; document.body.appendChild(ta); ta.select();
+  try{ document.execCommand("copy"); }catch(_){}
+  document.body.removeChild(ta);
+  const old=btn.textContent; btn.textContent="Copié"; setTimeout(()=>btn.textContent=old,1400);
+}
+
+boot();
+</script>
+</body>
+</html>
